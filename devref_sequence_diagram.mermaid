@@ -1,0 +1,91 @@
+sequenceDiagram
+    participant C as Client
+    participant API as APIController
+    participant SE as SearchEngine
+    participant NLP as NLPProcessor
+    participant VDB as VectorDB
+    participant DI as DocumentationIndex
+    participant CPE as CodePreviewEngine
+    
+    %% Search Query Processing Flow
+    C->>API: search(query, filters)
+    API->>SE: search(query, filters)
+    SE->>NLP: processQuery(query)
+    NLP-->>SE: return processedQuery
+    SE->>VDB: similaritySearch(processedQuery.embedding, filters)
+    VDB-->>SE: return vectorResults
+    SE->>DI: search(processedQuery.keywords)
+    DI-->>SE: return keywordResults
+    SE->>SE: rankResults(vectorResults, keywordResults)
+    SE-->>API: return rankedResults
+    
+    loop For each result with code examples
+        API->>CPE: createPreview(result.codeExample)
+        CPE-->>API: return preview
+    end
+    
+    API-->>C: return searchResults with previews
+    
+    %% Documentation Synchronization Flow
+    note over C,CPE: Documentation Synchronization Flow
+    participant S as Scheduler
+    participant DS as DocumentationSyncer
+    
+    S->>DS: syncAllSources()
+    
+    loop For each documentation source
+        DS->>DS: fetchLatestDocumentation(source)
+        DS->>DS: parseDocumentation(rawContent)
+        
+        loop For each documentation section
+            DS->>NLP: generateEmbedding(section.content)
+            NLP-->>DS: return embedding
+            DS->>DI: updateSection(section)
+        end
+        
+        DS->>VDB: upsertVectors(sections)
+        VDB-->>DS: confirmation
+    end
+    
+    DS-->>S: return syncReport
+    
+    %% User Interaction with Code Examples Flow
+    note over C,CPE: User Interaction with Code Examples
+    participant P as Preview
+    
+    C->>API: modifyCodeExample(previewId, newCode)
+    API->>CPE: updatePreview(previewId, newCode)
+    CPE->>CPE: validateCode(newCode)
+    CPE->>P: update(newCode)
+    P->>P: render()
+    P-->>CPE: return renderedOutput
+    CPE-->>API: return updatedPreview
+    API-->>C: return updatedPreview
+    
+    %% User Authentication Flow
+    note over C,CPE: User Authentication and Preferences
+    participant U as User
+    participant UP as UserPreferences
+    
+    C->>API: login(email, password)
+    API->>U: login(email, password)
+    U-->>API: return authToken
+    API-->>C: return authToken
+    
+    C->>API: getUserPreferences()
+    API->>U: getPreferences()
+    U->>UP: getAll()
+    UP-->>U: return preferences
+    U-->>API: return preferences
+    API-->>C: return preferences
+    
+    %% Saving References Flow
+    note over C,CPE: Saving and Managing References
+    participant SR as SavedReference
+    
+    C->>API: saveReference(referenceData)
+    API->>U: saveReference(referenceData)
+    U->>SR: create(referenceData)
+    SR-->>U: return savedReference
+    U-->>API: return savedReference
+    API-->>C: return confirmation
