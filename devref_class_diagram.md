@@ -1,0 +1,195 @@
+```mermaid
+classDiagram
+    class User {
+        +string id
+        +string email
+        +string name
+        +string[] preferredSources
+        +SearchHistory[] searchHistory
+        +SavedReference[] savedReferences
+        +UserPreferences preferences
+        +register(email, password, name) User
+        +login(email, password) AuthToken
+        +updatePreferences(preferences) bool
+        +getSavedReferences() SavedReference[]
+        +saveReference(reference) SavedReference
+    }
+    
+    class UserPreferences {
+        +string theme
+        +string[] defaultSources
+        +boolean showLivePreview
+        +string codeEditorTheme
+        +updateTheme(theme) void
+        +setDefaultSources(sources) void
+    }
+    
+    class SearchHistory {
+        +string id
+        +string userId
+        +string query
+        +string[] selectedSources
+        +date timestamp
+        +SearchResult[] results
+        +save() void
+        +delete() void
+    }
+    
+    class SavedReference {
+        +string id
+        +string userId
+        +string title
+        +string content
+        +string sourceUrl
+        +string sourceName
+        +string[] tags
+        +string notes
+        +date savedAt
+        +CodeExample[] codeExamples
+        +save() void
+        +update(data) void
+        +delete() void
+        +share(recipients) string
+    }
+    
+    class SearchEngine {
+        +DocumentationIndex[] indices
+        +VectorDB vectorDb
+        +NLPProcessor nlpProcessor
+        +search(query, filters) SearchResult[]
+        +rankResults(results) SearchResult[]
+        +processQuery(query) ProcessedQuery
+    }
+    
+    class NLPProcessor {
+        +processQuery(query) ProcessedQuery
+        +extractKeywords(query) string[]
+        +determineIntent(query) string
+        +generateEmbedding(text) float[]
+    }
+    
+    class DocumentationIndex {
+        +string source
+        +string version
+        +date lastUpdated
+        +DocumentationSection[] sections
+        +createIndex() void
+        +updateIndex() void
+        +search(query) DocumentationSection[]
+    }
+    
+    class DocumentationSection {
+        +string id
+        +string title
+        +string content
+        +string path
+        +string sourceUrl
+        +string source
+        +float[] embedding
+        +CodeExample[] examples
+        +generateEmbedding() void
+        +parseContent() void
+    }
+    
+    class CodeExample {
+        +string id
+        +string code
+        +string language
+        +string description
+        +boolean isInteractive
+        +Dependencies[] dependencies
+        +formatCode() string
+        +generatePreview() void
+    }
+    
+    class Dependencies {
+        +string name
+        +string version
+        +string url
+    }
+    
+    class SearchResult {
+        +string id
+        +float relevanceScore
+        +DocumentationSection section
+        +string[] highlightedTerms
+        +string[] matchedKeywords
+        +render() void
+        +getFormattedContent() string
+    }
+    
+    class ProcessedQuery {
+        +string originalQuery
+        +string[] keywords
+        +string intent
+        +float[] embedding
+        +string[] detectedSources
+    }
+    
+    class VectorDB {
+        +createIndex(name) void
+        +deleteIndex(name) void
+        +upsertVectors(vectors) void
+        +similaritySearch(embedding, filters, limit) SearchResult[]
+        +deleteVectors(ids) void
+    }
+    
+    class DocumentationSyncer {
+        +string[] sources
+        +SyncStatus[] syncStatus
+        +syncAllSources() SyncReport
+        +syncSource(source) SyncReport
+        +getSourceSchema(source) Schema
+        +parseDocumentation(source, content) DocumentationSection[]
+    }
+    
+    class SyncReport {
+        +date timestamp
+        +int newDocuments
+        +int updatedDocuments
+        +int deletedDocuments
+        +int errorCount
+        +string[] errorDetails
+    }
+    
+    class CodePreviewEngine {
+        +createPreview(code, language, dependencies) Preview
+        +updatePreview(previewId, code) Preview
+        +getPreview(previewId) Preview
+        +validateCode(code, language) ValidationResult
+    }
+    
+    class Preview {
+        +string id
+        +string renderedOutput
+        +string code
+        +string language
+        +Error[] errors
+        +render() string
+    }
+    
+    class APIController {
+        +handleSearch(query, filters) SearchResult[]
+        +handleUserRegistration(data) User
+        +handleSaveReference(userId, data) SavedReference
+        +handleCodePreview(code, language) Preview
+    }
+    
+    User "1" -- "*" SearchHistory : has
+    User "1" -- "*" SavedReference : saves
+    User "1" -- "1" UserPreferences : has
+    SearchHistory "1" -- "*" SearchResult : contains
+    SavedReference "1" -- "*" CodeExample : contains
+    DocumentationIndex "1" -- "*" DocumentationSection : indexes
+    DocumentationSection "1" -- "*" CodeExample : includes
+    SearchEngine -- NLPProcessor : uses
+    SearchEngine -- VectorDB : uses
+    SearchEngine -- DocumentationIndex : manages
+    SearchEngine "1" -- "*" SearchResult : produces
+    DocumentationSyncer -- DocumentationIndex : updates
+    CodeExample "1" -- "*" Dependencies : requires
+    CodePreviewEngine -- Preview : creates
+    APIController -- SearchEngine : uses
+    APIController -- User : manages
+    APIController -- CodePreviewEngine : uses
+```
